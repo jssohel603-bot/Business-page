@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Road Rush — Avoid the Buses</title>
+<style>
+  :root{--bg:#0b1220;--road:#2b2b2b;--side:#1b1f2a;--accent:#0ea5a4}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,Arial,sans-serif;background:linear-gradient(180deg,#071428,#0b1830);color:#e6eef6;display:flex;align-items:flex-start;justify-content:center;padding:18px}
+  .wrap{width:920px;max-width:96vw;padding:16px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));box-shadow:0 8px 30px rgba(2,6,23,0.6)}
+  h1{margin:0 0 6px;font-size:20px}
+  p.small{margin:0 0 12px;color:#cbd5e1}
+  #game{display:block;width:100%;border-radius:10px;background:var(--road);touch-action:none}
+  .hud{display:flex;gap:12px;align-items:center;margin-top:12px;flex-wrap:wrap}
+  .panel{background:rgba(255,255,255,0.03);padding:10px;border-radius:8px;color:#e6eef6;min-width:110px;text-align:center}
+  button{background:var(--accent);border:none;color:#022; padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:700}
+  .hint{color:#c7f9f2;font-weight:600}
+  @media(max-width:520px){.wrap{padding:12px}}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Road Rush — বাস এড়িয়ে বেঁচে যাও!</h1>
+    <p class="small">Arrow / WASD দিয়ে চলুন, মোবাইলে টাচ দিয়ে বাম/ডান সোয়াইপ করুন। যতক্ষণ বেঁচে থাকবেন স্কোর বাড়বে। চাপুন Restart করে আবার খেলুন।</p>
+
+    <canvas id="game" width="900" height="500"></canvas>
+
+    <div class="hud">
+      <div class="panel"><div>Score</div><div id="score" style="font-size:20px;font-weight:700">0</div><small>টিকে থাকার সময়</small></div>
+      <div class="panel"><div>Speed</div><div id="speed" style="font-size:20px;font-weight:700">1</div><small>গেইম গতি</small></div>
+      <div style="margin-left:auto"><button id="restart">Restart</button></div>
+    </div>
+    <div style="margin-top:8px;color:#cbd5e1">টিপ: স্কোর বাড়লে বাস বেশি দ্রুত আসবে — সাবধানে চলুন!</div>
+  </div>
+
+<script>
+/* Road Rush — Avoid the Buses
+   Single file: save as index.html and open in browser.
+   Controls: Left/Right arrow or A/D. Mobile: swipe left/right.
+*/
+
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+let W = canvas.width, H = canvas.height;
+
+// Road configuration
+const road = { x: W*0.12, w: W*0.76, left: W*0.12, right: W*0.12 + W*0.76 };
+const laneCount = 3;
+const laneWidth = road.w / laneCount;
+
+// Player car
+const player = {
+  lane: 1, // 0..laneCount-1 (center start)
+  x: 0,
+  y: H - 110,
+  w: Math.min(68, laneWidth*0.7),
+  h: 100,
+  color: '#1e90ff'
+};
+
+// Obstacles (buses)
+let obstacles = []; // each: {lane, y, w,h, speed, type}
+let spawnTimer = 0;
+let spawnInterval = 1200; // ms initial
+let gameSpeed = 1; // increases over time
+let score = 0;
+let running = true;
+let lastTime = performance.now();
+
+// UI
+const uiScore = document.getElementById('score');
+const uiSpeed = document.getElement
